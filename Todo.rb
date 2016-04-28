@@ -2,13 +2,14 @@ require "byebug"
 #Modules
 module Menu
 	def menu
-		" Welcome to the TodoList.
+		"Welcome to the TodoList.
 		Enter 1 to Add
 		Enter 2 to Show
 		Enter 3 to Write
 		Enter 4 to Read
 		Enter 5 to Delete
 		Enter 6 to Update
+		Enter 7 to Toggle
 		Enter Q to Quite "
 	end
 
@@ -54,13 +55,20 @@ class List
 	end
 
 	def write_to_file(filename)
-		IO.write(filename, @all_tasks.map(&:to_s).join("\n"))
+		machine = @all_tasks.map(&:to_machine).join("\n")
+		IO.write(filename, machine)
 	end
 
 	def read_from_file(filename)
 		IO.readlines(filename).each do |line|
-			add(Task.new(line.chomp))
+			status, *description = line.split(':')
+			status = status.include?('X')
+			add(Task.new(description.join(':').strip, status))
 		end
+	end
+
+	def toggle(task_number)
+		@all_tasks[task_number-1].toggle_status
 	end
 
 end
@@ -84,6 +92,10 @@ class Task
 
 	def to_s
 		description
+	end
+
+	def toggle_status
+		@status = !completed?
 	end
 
 	private
@@ -121,9 +133,14 @@ if __FILE__ == $PROGRAM_NAME
 	    when '6'
 	    	my_list.show
 	    	my_list.update(prompt("which task would you like to edit").to_i, Task.new(prompt("what is the new task")) )
+	    when '7'
+	    	my_list.show
+	    	my_list.toggle(prompt("Which task would you like to toggle").to_i)
   		else
   			puts "can't make  sense of input"
   		end
     end
     puts "Thanks for using this app :P"
 end 
+
+
